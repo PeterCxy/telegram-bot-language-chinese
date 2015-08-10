@@ -1,0 +1,14 @@
+{
+	"name": "telegram-bot-language-chinese",
+	"version": "1.0.0",
+	"author": "PeterCxy",
+	"description": "Chinese language model for telegram-bot-coffee",
+	"license": "GPL-3.0.0",
+	"homepage": "https://github.com/PeterCxy/telegram-bot-language-chinese",
+	"dependencies": {
+		"telegram-bot-coffee": ">=1.0.0",
+		"korubaku": ">=1.0.1",
+		"nodejieba": ">=1.2.2"
+	},
+	"main": "./lib/functions"
+}
