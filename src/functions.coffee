@@ -48,18 +48,17 @@ learn = (msg, exp) ->
 		exp = exp.replace /(\[|\()(.*?)(\]|\)) /g, ''
 		exp = exp.replace /(?![^<]*>|[^<>]*<\/)((https?:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
 		exp = exp.trim()
-		if exp.length < 100
-			console.log "exp = #{exp}"
-			result = jieba.tag exp
-			model = ''
-			for r in result
-				[word, tag] = r.split(':')
-				console.log "word=#{word} tag=#{tag}"
-				model += tag + ' '
-				yield db.sadd "tg#{msg.chat.id}word#{tag}", word, ko.default()
-			model = model.trim()
-			console.log "Model: #{model}"
-			yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
+		console.log "exp = #{exp}"
+		result = jieba.tag exp
+		model = ''
+		for r in result
+			[word, tag] = r.split(':')
+			console.log "word=#{word} tag=#{tag}"
+			model += tag + ' '
+			yield db.sadd "tg#{msg.chat.id}word#{tag}", word, ko.default()
+		model = model.trim()
+		console.log "Model: #{model}"
+		yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
 
 exports.default = (msg) ->
 	learn msg, msg.text
