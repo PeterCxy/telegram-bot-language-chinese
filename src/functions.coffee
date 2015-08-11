@@ -45,7 +45,11 @@ exports.setup = (telegram, store, server, config) ->
 
 learn = (msg, exp) ->
 	korubaku (ko) =>
-		if exp.length < 50
+		exp = exp.replace /(\[|\()(.*?)(\]|\)) /g, ''
+		exp = exp.replace /(?![^<]*>|[^<>]*<\/)((https?:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
+		exp = exp.trim()
+		if exp.length < 100
+			console.log "exp = #{exp}"
 			result = jieba.tag exp
 			model = ''
 			for r in result
