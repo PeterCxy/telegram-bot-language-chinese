@@ -61,4 +61,4 @@ learn = (msg, exp) ->
 		yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
 
 exports.default = (msg) ->
-	learn msg, msg.text
+	learn msg, exp for exp in msg.text.split '\n'
