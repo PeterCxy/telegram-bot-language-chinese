@@ -32,7 +32,7 @@ exports.setup = (telegram, store, server, config) ->
 			desc: 'Speak a sentence based on previously learnt language model'
 			act: (msg) ->
 				korubaku (ko) =>
-					[err, model] = yield db.srandmember "tg#{msg.chat.id}models", ko.raw()
+					[err, model] = yield randmember "chn#{msg.chat.id}models", ko.raw()
 					if model?
 						console.log "model = #{model}"
 						sentence = ''
@@ -40,7 +40,7 @@ exports.setup = (telegram, store, server, config) ->
 							if isCustomTag m
 								word = customUntag m
 							else
-								[err, word] = yield db.srandmember "tg#{msg.chat.id}word#{m}", ko.raw()
+								[err, word] = yield randmember "chn#{msg.chat.id}word#{m}", ko.raw()
 							console.log "word for #{m}: #{word}"
 							sentence += word if word?
 						telegram.sendMessage msg.chat.id, sentence.trim()
@@ -69,10 +69,10 @@ learn = (msg, exp) ->
 			for word, i in words
 				tag = tags[i]
 				console.log "#{i}: #{word} -> #{tag}"
-				yield db.sadd "tg#{msg.chat.id}word#{tag}", word, ko.default()
+				yield db.lpush "chn#{msg.chat.id}word#{tag}", word, ko.default()
 			model = tags.join ' '
 			console.log "Model: #{model}"
-			yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
+			yield db.lpush "chn#{msg.chat.id}models", model, ko.default()
 		else
 			console.log 'Not accepted because of too much unrecognized string.'
 
@@ -108,7 +108,7 @@ tagType = -1
 customUntag = (tag) ->
 	if tag is '_my_start'
 		if tagType is -1
-			tagType = Math.floor Math.random() * startTags.length
+			tagType = rand startTags.length
 		startTags[tagType]
 	else if tag is '_my_end'
 		type = if tagType is -1
@@ -119,3 +119,13 @@ customUntag = (tag) ->
 		endTags[type]
 	else
 		null
+
+rand = (max) ->
+	Math.floor Math.random() * max
+
+randmember = (listName, callback) ->
+	korubaku (ko) =>
+		len = yield db.llen listName, ko.default()
+		index = rand len
+		[err, [member]] = yield db.lrange listName, index, index, ko.raw()
+		callback err, member
