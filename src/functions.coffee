@@ -77,7 +77,7 @@ learn = (msg, exp) ->
 			console.log 'Not accepted because of too much unrecognized string.'
 
 exports.default = (msg) ->
-	learn msg, exp for exp in msg.text.split '\n'
+	(learn msg, exp if exp.length <= 100) for exp in msg.text.split '\n'
 
 startTags = [
 	'{', '[', '(', '\'', '"',
