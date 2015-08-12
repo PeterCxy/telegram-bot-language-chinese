@@ -57,7 +57,7 @@ learn = (msg, exp) ->
 		words = []
 		unrecognized = 0
 		for r in result
-			[word, ..., tag] = r.split(':')
+			[word..., tag] = r.split(':')
 			tag = customTag word, tag
 			tags.push tag
 			words.push word
