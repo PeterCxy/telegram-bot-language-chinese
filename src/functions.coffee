@@ -50,6 +50,7 @@ learn = (msg, exp) ->
 	korubaku (ko) =>
 		exp = exp.replace /(\[|\()(.*?)(\]|\)) /g, ''
 		exp = exp.replace /(?![^<]*>|[^<>]*<\/)((https?:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
+		exp = exp.replace /[a-zA-Z0-9]+:/g, ''
 		exp = exp.trim()
 		console.log "exp = #{exp}"
 		result = jieba.tag exp
