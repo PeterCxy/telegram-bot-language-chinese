@@ -45,7 +45,7 @@ exports.setup = (telegram, store, server, config) ->
 learn = (msg, exp) ->
 	korubaku (ko) =>
 		exp = exp.replace /^([\[(\<](.*?) ?[\])\>]))+ /g, ''
-		exp = exp.replace /^[[:alnum:]_\W]+: /, ''
+		exp = exp.replace /^\S+: /, ''
 		exp = exp.replace /(?![^<]*>|[^<>]*<\/)(([a-z][0-9a-z]*:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
 		exp = exp.trim()
 		console.log "exp = #{exp}"
