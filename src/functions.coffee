@@ -53,16 +53,28 @@ learn = (msg, exp) ->
 		exp = exp.trim()
 		console.log "exp = #{exp}"
 		result = jieba.tag exp
-		model = ''
+		tags = []
+		words = []
+		unrecognized = 0
 		for r in result
 			[word, tag] = r.split(':')
 			tag = customTag word, tag
-			console.log "word=#{word} tag=#{tag}"
-			model += tag + ' '
-			yield db.sadd "tg#{msg.chat.id}word#{tag}", word, ko.default()
-		model = model.trim()
-		console.log "Model: #{model}"
-		yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
+			tags.push tag
+			words.push word
+
+			if tag is 'eng' or tag is 'x'
+				unrecognized += 1
+
+		if unrecognized < result.length * 0.6
+			for word, i in words
+				tag = tags[i]
+				console.log "#{i}: #{word} -> #{tag}"
+				yield db.sadd "tg#{msg.chat.id}word#{tag}", word, ko.default()
+			model = tags.join ' '
+			console.log "Model: #{model}"
+			yield db.sadd "tg#{msg.chat.id}models", model, ko.default()
+		else
+			console.log 'Not accepted because of too much unrecognized string.'
 
 exports.default = (msg) ->
 	learn msg, exp for exp in msg.text.split '\n'
