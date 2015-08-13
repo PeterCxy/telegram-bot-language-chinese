@@ -1,5 +1,6 @@
 jieba = require 'nodejieba'
 redis = require 'redis'
+emojiStrip = require 'emoji-strip'
 {korubaku} = require 'korubaku'
 
 db = redis.createClient()
@@ -81,7 +82,7 @@ learn = (msg, exp) ->
 			
 
 exports.default = (msg) ->
-	(learn msg, exp if exp.length <= 100 and exp != '') for exp in msg.text.split /[\n|?|!|。|！|？]/
+	(learn msg, emojiStrip exp if exp.length <= 100 and exp != '') for exp in msg.text.split /[\n|?|!|。|！|？]/
 
 # scope start
 startTags = [
