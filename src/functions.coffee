@@ -53,20 +53,19 @@ exports.setup = (telegram, store, server, config) ->
 						return
 
 					console.log "model = #{model}"
-					[keyword] = jieba.extract question, 1
-					if !keyword?
-						return
-
-					keyword = keyword.split(':')[0]
-					console.log "keyword = #{keyword}"
+					words = jieba.cut question
 					sentence = ''
 					for m in model.split ' '
 						if isCustomTag m
 							word = customUntag m
 						else
-							[err, word] = yield randmember "chn#{msg.chat.id}#{m}coexist#{keyword}", ko.raw()
+							word = ''
+							for w in words
+								[err, word] = yield randmember "chn#{msg.chat.id}#{m}coexist#{w}", ko.raw()
+								if !err? and word? and word isnt ''
+									break
 							console.log "#{m} -> #{word}"
-							if err? or !word?
+							if err? or !word? or word is ''
 								continue
 						sentence += word
 					telegram.sendMessage msg.chat.id, sentence, msg.message_id
