@@ -60,7 +60,8 @@ exports.setup = (telegram, store, server, config) ->
 							word = customUntag m
 						else
 							word = ''
-							for w in words
+							for i in [1...words.length]
+								w = words[rand words.length]
 								[err, word] = yield randmember "chn#{msg.chat.id}#{m}coexist#{w}", ko.raw()
 								if !err? and word? and word isnt ''
 									break
