@@ -50,7 +50,7 @@ exports.setup = (telegram, store, server, config) ->
 					question = args.join ' '
 
 					# If the message is a reply, use the original
-					if question.trim() is '' and msg.reply_to_message
+					if question.trim() is '' and msg.reply_to_message?
 						question = msg.reply_to_message.text
 
 					if question.trim() is ''
@@ -81,7 +81,11 @@ exports.setup = (telegram, store, server, config) ->
 								if err? or !word? or word is ''
 									continue
 						sentence += word
-					telegram.sendMessage msg.chat.id, sentence, msg.message_id
+					telegram.sendMessage msg.chat.id, sentence,
+						if !msg.reply_to_message?
+							msg.message_id
+						else
+							msg.reply_to_message.message_id
 	]
 
 learn = (msg, exp) ->
