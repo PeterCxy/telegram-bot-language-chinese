@@ -104,7 +104,7 @@ learn = (msg, exp) ->
 			console.log "#{i}: #{word} -> #{tag}"
 			yield db.lpush "chn#{msg.chat.id}word#{tag}", word, ko.default()
 
-			for w, j in word
+			for w, j in words
 				yield db.lpush "chn#{msg.chat.id}#{tags[j]}coexist#{word}", w, ko.default()
 		
 		model = tags.join ' '
