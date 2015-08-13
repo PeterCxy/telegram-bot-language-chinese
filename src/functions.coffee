@@ -48,6 +48,14 @@ exports.setup = (telegram, store, server, config) ->
 			act: (msg, args) ->
 				korubaku (ko) =>
 					question = args.join ' '
+
+					# If the message is a reply, use the original
+					if question.trim() is '' and msg.reply_to_message
+						question = msg.reply_to_message.text
+
+					if question.trim() is ''
+						return
+
 					[err, model] = yield randmember "chn#{msg.chat.id}models", ko.raw()
 					if !model?
 						return
