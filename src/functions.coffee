@@ -142,7 +142,7 @@ customTag = (word, tag) ->
 			'_my_start'
 		else if word in endTags
 			'_my_end'
-		else if word in baltags
+		else if word in balTags
 			'_my_bal'
 		else if word in litTags
 			'_my_lit_' + word
