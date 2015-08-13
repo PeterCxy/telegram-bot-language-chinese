@@ -42,9 +42,9 @@ exports.setup = (telegram, store, server, config) ->
 							sentence += word if word?
 						telegram.sendMessage msg.chat.id, sentence.trim()
 		,
-			cmd: 'reply'
+			cmd: 'answer'
 			num: -1
-			desc: 'Reply to the question'
+			desc: 'Answer to the question'
 			act: (msg, args) ->
 				korubaku (ko) =>
 					question = args.join ' '
