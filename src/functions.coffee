@@ -75,7 +75,11 @@ exports.setup = (telegram, store, server, config) ->
 									break
 							console.log "#{m} -> #{word}"
 							if err? or !word? or word is ''
-								continue
+								console.log "falling back on #{m}"
+								[err, word] = yield randmember "chn#{msg.chat.id}word#{m}", ko.raw()
+
+								if err? or !word? or word is ''
+									continue
 						sentence += word
 					telegram.sendMessage msg.chat.id, sentence, msg.message_id
 	]
