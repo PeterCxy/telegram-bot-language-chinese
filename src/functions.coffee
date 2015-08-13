@@ -43,8 +43,9 @@ exports.setup = (telegram, store, server, config) ->
 	]
 
 learn = (msg, exp) ->
+	console.log exp
 	korubaku (ko) =>
-		exp = exp.replace /^([\[(\<](.*?) ?[\])\>]))+ /g, ''
+		exp = exp.replace /^((\[|\()(.*?)(\]|\)) )+/g, ''
 		exp = exp.replace /(?![^<]*>|[^<>]*<\/)(([a-z][0-9a-z]*:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
 		exp = exp.replace /^\S+: /, ''
 		exp = exp.trim()
@@ -80,7 +81,7 @@ learn = (msg, exp) ->
 			
 
 exports.default = (msg) ->
-	(learn msg, exp if exp.length <= 100 and exp != '') for exp in msg.text.split '\n。？！'
+	(learn msg, exp if exp.length <= 100 and exp != '') for exp in msg.text.split /[\n|?|!|。|！|？]/
 
 # scope start
 startTags = [
@@ -117,9 +118,9 @@ customTag = (word, tag) ->
 isCustomTag = (tag) ->
 	tag.startsWith '_my'
 
-_tagType ||= 3
+_tagType = 3
 tagType = _tagType
-balType ||= 2
+balType = 2
 customUntag = (tag) ->
 	if tag is '_my_start'
 		if tagType is -1
