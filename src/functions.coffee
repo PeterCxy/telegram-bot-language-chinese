@@ -41,6 +41,35 @@ exports.setup = (telegram, store, server, config) ->
 							console.log "word for #{m}: #{word}"
 							sentence += word if word?
 						telegram.sendMessage msg.chat.id, sentence.trim()
+		,
+			cmd: 'reply'
+			num: -1
+			desc: 'Reply to the question'
+			act: (msg, args) ->
+				korubaku (ko) =>
+					question = args.join ' '
+					[err, model] = yield randmember "chn#{msg.chat.id}models", ko.raw()
+					if !model?
+						return
+
+					console.log "model = #{model}"
+					[keyword] = jieba.extract question, 1
+					if !keyword?
+						return
+
+					keyword = keyword.split(':')[0]
+					console.log "keyword = #{keyword}"
+					sentence = ''
+					for m in model.split ' '
+						if isCustomTag m
+							word = customUntag m
+						else
+							[err, word] = yield randmember "chn#{msg.chat.id}#{m}coexist#{keyword}", ko.raw()
+							console.log "#{m} -> #{word}"
+							if err? or !word?
+								continue
+						sentence += word
+					telegram.sendMessage msg.chat.id, sentence, msg.message_id
 	]
 
 learn = (msg, exp) ->
@@ -75,6 +104,9 @@ learn = (msg, exp) ->
 			tag = tags[i]
 			console.log "#{i}: #{word} -> #{tag}"
 			yield db.lpush "chn#{msg.chat.id}word#{tag}", word, ko.default()
+
+			for w, j in word
+				yield db.lpush "chn#{msg.chat.id}#{tags[j]}coexist#{word}", w, ko.default()
 		
 		model = tags.join ' '
 		# Trys to minimize consecutive 'low-quality' chars.
