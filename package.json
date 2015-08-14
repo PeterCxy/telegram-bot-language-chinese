@@ -8,7 +8,7 @@
 	"dependencies": {
 		"telegram-bot-coffee": ">=1.0.0",
 		"korubaku": ">=1.0.1",
-		"nodejieba": ">=1.2.2",
+		"nodejieba": ">=1.3.0",
 		"redis": ">=0.12.1",
 		"emoji-strip": ">=0.0.3"
 	},
