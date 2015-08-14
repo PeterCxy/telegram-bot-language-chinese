@@ -3,6 +3,9 @@ redis = require 'redis'
 emojiStrip = require 'emoji-strip'
 {korubaku} = require 'korubaku'
 
+OpenCC = require 'opencc'
+opencc = new OpenCC 't2s.json'
+
 db = redis.createClient()
 
 exports.name = 'chinese-lang'
@@ -95,6 +98,10 @@ learn = (msg, exp) ->
 		exp = exp.replace /(?![^<]*>|[^<>]*<\/)(([a-z][0-9a-z]*:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
 		exp = exp.replace /^(\S+, ?)*\S+: /, ''
 		exp = exp.trim()
+
+		# Convert all to SC!
+		exp = yield opencc.convert exp, ko.default()
+
 		console.log "exp = #{exp}"
 		result = jieba.tag exp
 		tags = []
