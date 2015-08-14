@@ -19,10 +19,12 @@ exports.setup = (telegram, store, server, config) ->
 				telegram.sendMessage msg.chat.id, jieba.tag(exp.substring 0,100).join(', '), msg.message_id
 		,
 			cmd: 'learn'
-			num: 1
-			desc: 'Learn a Chinese expression'
+			num: -1
+			desc: 'Learn a Chinese expression in a raw way.'
 			act: (msg, exp) ->
-				learn msg, exp
+				times = if typeof exp[0] == "number" then Math.max exp.shift(), 15 else 3
+				return if exp.length < 1
+				( learn msg, emojiStrip e if e.length <= 100 and e != '' ) for e in exp.split /[\n。！？]/ for _learn_p in [0..times-1]
 		,
 			cmd: 'speak'
 			num: 0
@@ -44,20 +46,18 @@ exports.setup = (telegram, store, server, config) ->
 		,
 			cmd: 'answer'
 			num: -1
-			desc: 'Answer to the question'
+			desc: 'Answer to the question, trying to use the given vocabulary.'
 			act: (msg, args) ->
 				korubaku (ko) =>
-					question = args.join ' '
+					# If the message is a reply, use the original and omit the args.
+					question = msg.reply_to_message?.text || args.join ' '
 
-					# If the message is a reply, use the original
-					if question.trim() is '' and msg.reply_to_message?
-						question = msg.reply_to_message.text
-
-					if question.trim() is ''
+					if question = question.trim() is ''
 						return
 
 					[err, model] = yield randmember "chn#{msg.chat.id}models", ko.raw()
 					if !model?
+						learn msg, question if 
 						return
 
 					console.log "model = #{model}"
@@ -73,19 +73,17 @@ exports.setup = (telegram, store, server, config) ->
 								[err, word] = yield randmember "chn#{msg.chat.id}#{m}coexist#{w}", ko.raw()
 								if !err? and word? and word isnt ''
 									break
+
 							console.log "#{m} -> #{word}"
 							if err? or !word? or word is ''
 								console.log "falling back on #{m}"
 								[err, word] = yield randmember "chn#{msg.chat.id}word#{m}", ko.raw()
 
-								if err? or !word? or word is ''
-									continue
+							if err? or !word? or word is ''
+								word = "[#{tag}]"
 						sentence += word
-					telegram.sendMessage msg.chat.id, sentence,
-						if !msg.reply_to_message?
-							msg.message_id
-						else
-							msg.reply_to_message.message_id
+					telegram.sendMessage msg.chat.id, sentence, msg.reply_to_message?.message_id || msg.message_id
+						
 	]
 
 learn = (msg, exp) ->
@@ -103,14 +101,16 @@ learn = (msg, exp) ->
 		for r in result
 			[w..., tag] = r.split(':')
 			word = w.join ':'
+			
+			if word.match /^\s+$/ is null
+				continue
+			
+			tag = customTag word, tag
+			tags.push tag
+			words.push word
 
-			if word isnt ' '
-				tag = customTag word, tag
-				tags.push tag
-				words.push word
-
-				if tag is 'eng' or tag is 'x'
-					unrecognized += 1
+			if tag is 'eng' or tag is 'x' or tag is 'm'
+				unrecognized += 1
 
 		if unrecognized >= result.length * 0.6
 			console.log 'Not accepted because of too much unrecognized string.'
@@ -133,7 +133,7 @@ learn = (msg, exp) ->
 			
 
 exports.default = (msg) ->
-	(learn msg, emojiStrip exp if exp.length <= 100 and exp != '') for exp in msg.text.split /[\n|?|!|。|！|？]/
+	(learn msg, emojiStrip exp if exp.length <= 100 and exp != '') for exp in msg.text.split /[\n。！？]/
 
 # scope start
 startTags = [
@@ -187,7 +187,7 @@ customUntag = (tag) ->
 	else if tag.startsWith '_my_lit_'
 		tag.substr 8
 	else
-		null
+		"[#{tag}]"
 
 rand = (max) ->
 	Math.floor Math.random() * max
