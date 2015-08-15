@@ -31,12 +31,7 @@ exports.setup = (telegram, store, server, config) ->
 			num: 0
 			desc: 'Did I say something correct?'
 			act: (msg) ->
-				korubaku (ko) =>
-					[err, last] = yield db.hget "chn#{msg.chat.id}", 'last', ko.raw()
-					if !err? and last? and last isnt ''
-						console.log "last = #{last}"
-						yield db.hset "chn#{msg.chat.id}", 'last', '', ko.default()
-						learn msg, last
+				learnLast msg
 		,
 			cmd: 'speak'
 			num: 0
@@ -55,7 +50,7 @@ exports.setup = (telegram, store, server, config) ->
 							console.log "word for #{m}: #{word}"
 							sentence += word if word?
 						sentence = sentence.trim()
-						yield db.hset "chn#{msg.chat.id}", 'last',  sentence, ko.default()
+						saveLast msg.chat.id, sentence
 						telegram.sendMessage msg.chat.id, sentence
 		,
 			cmd: 'answer'
@@ -101,13 +96,37 @@ exports.setup = (telegram, store, server, config) ->
 									continue
 						sentence += word
 					sentence = sentence.trim()
-					yield db.hset "chn#{msg.chat.id}", 'last', sentence, ko.default()
+					saveLast msg.chat.id, sentence
 					telegram.sendMessage msg.chat.id, sentence,
 						if !msg.reply_to_message?
 							msg.message_id
 						else
 							msg.reply_to_message.message_id
 	]
+
+saveLast = (chat, exp) ->
+	korubaku (ko) =>
+		yield db.hset "chn#{chat}", 'last', exp, ko.default()
+		yield db.hset "chn#{chat}", 'lastTime', Date.now(), ko.default()
+
+learnLast = (msg) ->
+	korubaku (ko) =>
+		[err, last] = yield db.hget "chn#{msg.chat.id}", 'last', ko.raw()
+		[err, lastTime] = yield db.hget "chn#{msg.chat.id}", 'lastTime', ko.raw()
+		if !err? and last? and last isnt '' and Date.now() - lastTime < 10000
+			console.log "last = #{last}"
+			yield db.hset "chn#{msg.chat.id}", 'last', '', ko.default()
+			learn msg, last
+
+# Consider these keywords as appreciations
+appreciations = [
+	'233', 'woc', '卧槽',
+	'成精', '666'
+]
+
+isAppreciation = (exp) ->
+	appreciations.some (a) ->
+		~exp.indexOf a
 
 filter = (exp) ->
 	exp = exp.replace /^([[(<].*? ?[\])>] )+/g, ''
@@ -124,6 +143,10 @@ learn = (msg, exp) ->
 
 		# Convert all to SC!
 		exp = yield opencc.convert exp, ko.default()
+
+		if isAppreciation exp
+			console.log 'appreciation!'
+			learnLast msg
 
 		console.log "exp = #{exp}"
 		result = jieba.tag exp
