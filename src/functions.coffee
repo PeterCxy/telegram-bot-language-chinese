@@ -56,6 +56,9 @@ exports.setup = (telegram, store, server, config) ->
 					if question.trim() is '' and msg.reply_to_message?
 						question = msg.reply_to_message.text
 
+					question = filter question
+					question = yield opencc.convert question, ko.default()
+
 					if question.trim() is ''
 						return
 
@@ -91,12 +94,17 @@ exports.setup = (telegram, store, server, config) ->
 							msg.reply_to_message.message_id
 	]
 
+filter = (exp) ->
+	exp = exp.replace /^([[(<].*? ?[\])>] )+/g, ''
+	exp = exp.replace /(?![^<]*>|[^<>]*<\/)(([a-z][0-9a-z]*:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
+	exp = exp.replace /^(\S+, ?)*\S+: /, ''
+	exp = exp.replace /((\/|\@)[a-zA-Z0-9]*) /, ''
+	exp
+
 learn = (msg, exp) ->
 	console.log exp
 	korubaku (ko) =>
-		exp = exp.replace /^([[(<].*? ?[\])>] )+/g, ''
-		exp = exp.replace /(?![^<]*>|[^<>]*<\/)(([a-z][0-9a-z]*:)\/\/[a-z0-9&#=.\/\-?_]+)/gi, ''
-		exp = exp.replace /^(\S+, ?)*\S+: /, ''
+		exp = filter exp
 		exp = exp.trim()
 
 		# Convert all to SC!
