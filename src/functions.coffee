@@ -27,6 +27,17 @@ exports.setup = (telegram, store, server, config) ->
 			act: (msg, exp) ->
 				learn msg, exp
 		,
+			cmd: 'great'
+			num: 0
+			desc: 'Did I say something correct?'
+			act: (msg) ->
+				korubaku (ko) =>
+					[err, last] = yield db.hget "chn#{msg.chat.id}", 'last', ko.raw()
+					if !err? and last? and last isnt ''
+						console.log "last = #{last}"
+						yield db.hset "chn#{msg.chat.id}", 'last', '', ko.default()
+						learn msg, last
+		,
 			cmd: 'speak'
 			num: 0
 			desc: 'Speak a sentence based on previously learnt language model'
@@ -43,7 +54,9 @@ exports.setup = (telegram, store, server, config) ->
 								[err, word] = yield randmember "chn#{msg.chat.id}word#{m}", ko.raw()
 							console.log "word for #{m}: #{word}"
 							sentence += word if word?
-						telegram.sendMessage msg.chat.id, sentence.trim()
+						sentence = sentence.trim()
+						yield db.hset "chn#{msg.chat.id}", 'last',  sentence, ko.default()
+						telegram.sendMessage msg.chat.id, sentence
 		,
 			cmd: 'answer'
 			num: -1
@@ -87,6 +100,8 @@ exports.setup = (telegram, store, server, config) ->
 								if err? or !word? or word is ''
 									continue
 						sentence += word
+					sentence = sentence.trim()
+					yield db.hset "chn#{msg.chat.id}", 'last', sentence, ko.default()
 					telegram.sendMessage msg.chat.id, sentence,
 						if !msg.reply_to_message?
 							msg.message_id
