@@ -172,17 +172,17 @@ learn = (msg, exp) ->
 		for word, i in words
 			tag = tags[i]
 			console.log "#{i}: #{word} -> #{tag}"
-			yield db.lpush "chn#{msg.chat.id}word#{tag}", word, ko.default()
+			yield addmember "chn#{msg.chat.id}word#{tag}", word, ko.default()
 
 			for w, j in words
-				yield db.lpush "chn#{msg.chat.id}#{tags[j]}coexist#{word}", w, ko.default()
+				yield addmember "chn#{msg.chat.id}#{tags[j]}coexist#{word}", w, ko.default()
 		
 		model = tags.join ' '
 		# Trys to minimize consecutive 'low-quality' chars.
 		model = model.replace /(x ){2,}x/g, 'x'
 		model = model.replace /(eng ){2,}eng/g ,'eng'
 		console.log "Model: #{model}"
-		yield db.lpush "chn#{msg.chat.id}models", model, ko.default()
+		yield addmember "chn#{msg.chat.id}models", model, ko.default()
 			
 
 exports.default = (msg) ->
@@ -245,9 +245,34 @@ customUntag = (tag) ->
 rand = (max) ->
 	Math.floor Math.random() * max
 
-randmember = (listName, callback) ->
+# For a sorted list in redis
+weightedRandom = (len) ->
+	total = (1 + len) * len / 2
+	r = rand len
+	t = 0
+	result = 0
+	for i in [1...len]
+		t += i
+		if t >= r
+			result = i
+			break
+	result
+
+addmember = (setName, member, callback) ->
 	korubaku (ko) =>
-		len = yield db.llen listName, ko.default()
-		index = rand len
-		[err, [member]] = yield db.lrange listName, index, index, ko.raw()
+		[err, score] = yield db.zscore setName, member, ko.raw()
+		if score?
+			score = Number score
+			score += 1
+		else
+			score = 1
+		console.log "#{member} -> #{score}"
+		[err, reply] = yield db.zadd setName, score, member, ko.raw()
+		callback err, reply
+
+randmember = (setName, callback) ->
+	korubaku (ko) =>
+		[err, len] = yield db.zcard setName, ko.raw()
+		index = weightedRandom len
+		[err, [member]] = yield db.zrange setName, index, index, ko.raw()
 		callback err, member
