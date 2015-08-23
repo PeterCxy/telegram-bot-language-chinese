@@ -260,6 +260,11 @@ weightedRandom = (len) ->
 
 addmember = (setName, member, callback) ->
 	korubaku (ko) =>
+		exist = yield db.exists setName, ko.default()
+
+		if exist is 0
+			console.log "set #{setName} does not exist"
+
 		[err, score] = yield db.zscore setName, member, ko.raw()
 		if score?
 			score = Number score
@@ -268,6 +273,12 @@ addmember = (setName, member, callback) ->
 			score = 1
 		console.log "#{member} -> #{score}"
 		[err, reply] = yield db.zadd setName, score, member, ko.raw()
+
+		if exist is 0
+			console.log "adding TTL to #{setName}"
+			# Keep only 2 days of data
+			yield db.expire setName, 2 * 24 * 60 * 60, ko.default()
+
 		callback err, reply
 
 randmember = (setName, callback) ->
