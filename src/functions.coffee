@@ -162,7 +162,7 @@ learn = (msg, exp) ->
 				tags.push tag
 				words.push word
 
-				if tag is 'eng' or tag is 'x'
+				if tag is 'eng' or tag is 'x' or isCustomTag tag
 					unrecognized += 1
 
 		if unrecognized >= result.length * 0.6
