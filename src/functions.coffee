@@ -157,7 +157,7 @@ learn = (msg, exp) ->
 			[w..., tag] = r.split(':')
 			word = w.join ':'
 
-			if word is ' '
+			if word.trim() is ''
 				continue
 
 			if tag is 'eng' or tag is 'x' or tag is 'm'
