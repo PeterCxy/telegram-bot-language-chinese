@@ -157,13 +157,15 @@ learn = (msg, exp) ->
 			[w..., tag] = r.split(':')
 			word = w.join ':'
 
-			if word isnt ' '
-				tag = customTag word, tag
-				tags.push tag
-				words.push word
+			if word.trim() is ''
+				continue
 
-				if tag is 'eng' or tag is 'x' or isCustomTag tag
-					unrecognized += 1
+			if tag is 'eng' or tag is 'x' or tag is 'm'
+				unrecognized += 1
+
+			tag = customTag word, tag
+			tags.push tag
+			words.push word
 
 		if unrecognized >= result.length * 0.6
 			console.log 'Not accepted because of too much unrecognized string.'
